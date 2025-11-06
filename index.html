@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cabbage Clicker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      position: relative;
+    }
+    .container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid black;
+      background: none;
+    }
+    input[type="number"] {
+      width: 60px;
+      font-size: 12px;
+    }
+    #warning {
+      color: red;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    #throwSection, #exploreSection, #exploreInterface, #optionsPanel {
+      display: none;
+      margin-top: 10px;
+    }
+    #optionsIcon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: block;
+    }
+    .circle-button {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1px solid black;
+      background: white;
+      font-size: 10px;
+      line-height: 60px;
+      text-align: center;
+      cursor: pointer;
+    }
+    #exportText {
+      background: #f0f0f0;
+      padding: 5px;
+      border: 1px solid #ccc;
+      font-size: 12px;
+      word-break: break-word;
+      margin-top: 10px;
+    }
+    #importArea {
+      width: 100%;
+      height: 60px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="clicker">Click me for cabbage</button>
+    <div id="cabbageCount">Cabbage: 0</div>
+    <div id="cabbageLimit" style="display:none;">Limit: 200</div>
+  </div>
+
+  <div id="throwSection" class="container">
+    <button id="throwButton">Throw cabbage</button>
+    <input type="number" id="throwAmount" min="1" value="1" />
+    <div id="thrownCount">Thrown: 0</div>
+  </div>
+
+  <div id="exploreSection" class="container">
+    <button id="exploreButton">Explore</button>
+    <div id="exploreCost">Cost: 150</div>
+  </div>
+
+  <div id="exploreInterface">
+    <h3>Welcome to the Cabbage Frontier</h3>
+    <p>Select a region to explore:</p>
+    <div id="regionList" class="container">
+      <button data-region="sprout">Sprout Valley</button>
+      <button data-region="leafy">Leafy Lake</button>
+      <button data-region="crunch">Crunch Caverns</button>
+    </div>
+    <div id="regionDescription" style="margin-top:10px; font-size:14px;"></div>
+  </div>
+
+  <div id="optionsIcon">
+    <button id="optionsButton" class="circle-button">Options</button>
+    <button id="backButton" class="circle-button" style="display:none;">Back</button>
+  </div>
+
+  <div id="optionsPanel">
+    <h3>Options</h3>
+    <button id="exportButton">Export Save</button>
+    <div id="exportText"></div>
+    <textarea id="importArea" placeholder="Paste save text here..."></textarea>
+    <button id="importButton">Import Save</button>
+  </div>
+
+  <div id="warning"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let count = 0, thrown = 0, lastClickTime = Date.now();
+      let throwUnlocked = false, exploreUnlocked = false, exploreActivated = false;
+
+      const $ = id => document.getElementById(id);
+
+      const updateDisplay = () => {
+        $('cabbageCount').textContent = `Cabbage: ${count}`;
+        $('thrownCount').textContent = `Thrown: ${thrown}`;
+        $('cabbageLimit').style.display = count >= 175 ? 'inline-block' : 'none';
+      };
+
+      $('clicker').addEventListener('click', () => {
+        const now = Date.now();
+        if (now - lastClickTime < 50) {
+          count = 0;
+          $('warning').textContent = 'Auto-clicker detected! Cabbage reset.';
+        } else {
+          count++;
+          $('warning').textContent = '';
+        }
+        lastClickTime = now;
+        updateDisplay();
+
+        if (!throwUnlocked && count >= 50) {
+          throwUnlocked = true;
+          $('throwSection').style.display = 'flex';
+        }
+        if (!exploreUnlocked && count >= 100) {
+          exploreUnlocked = true;
+          $('exploreSection').style.display = 'flex';
+        }
+      });
+
+      $('throwButton').addEventListener('click', () => {
+        const amount = parseInt($('throwAmount').value, 10);
+        if (amount > 0 && amount <= count) {
+          count -= amount;
+          thrown += amount;
+          updateDisplay();
+        }
+      });
+
+      $('exploreButton').addEventListener('click', () => {
+        if (count >= 150 && !exploreActivated) {
+          count -= 150;
+          exploreActivated = true;
+          updateDisplay();
+          $('exploreInterface').style.display = 'block';
+        }
+      });
+
+      $('optionsButton').addEventListener('click', () => {
+        $('exploreInterface').style.display = 'none';
+        $('optionsPanel').style.display = 'block';
+        $('optionsButton').style.display = 'none';
+        $('backButton').style.display = 'inline-block';
+      });
+
+      $('backButton').addEventListener('click', () => {
+        $('optionsPanel').style.display = 'none';
+        $('exploreInterface').style.display = exploreActivated ? 'block' : 'none';
+        $('backButton').style.display = 'none';
+        $('optionsButton').style.display = 'inline-block';
+      });
+
+      const generateNoise = len => Array.from({length: len}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*62)]).join('');
+
+      $('exportButton').addEventListener('click', () => {
+        const save = btoa(JSON.stringify({ count, thrown, throwUnlocked, exploreUnlocked, exploreActivated }));
+        $('exportText').textContent = generateNoise(10) + save + generateNoise(10);
+      });
+
+      $('importButton').addEventListener('click', () => {
+        try {
+          const raw = $('importArea').value.trim();
+          const decoded = atob(raw.slice(10, -10));
+          const data = JSON.parse(decoded);
+
+          count = data.count || 0;
+          thrown = data.thrown || 0;
+          throwUnlocked = !!data.throwUnlocked;
+          exploreUnlocked = !!data.exploreUnlocked;
+          exploreActivated = !!data.exploreActivated;
+
+          updateDisplay();
+          $('throwSection').style.display = throwUnlocked ? 'flex' : 'none';
+          $('exploreSection').style.display = exploreUnlocked ? 'flex' : 'none';
+          $('exploreInterface').style.display = exploreActivated ? 'block' : 'none';
+          lastClickTime = Date.now();
+        } catch {
+          alert('Invalid save string.');
+        }
+      });
+
+      const regionDescription = $('regionDescription');
+      const regionButtons = document.querySelectorAll('#regionList button');
+
+      regionButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const region = btn.dataset.region;
+          let desc = '';
+          if (region === 'sprout') {
+            desc = count >= 200
+              ? 'Sprout Valley: Gentle hills where cabbages first sprouted.'
+              : 'Locked. Requires 200 cabbages.';
+          } else if (region === 'leafy') {
+            desc = count >= 300
+              ? 'Leafy Lake: A shimmering lake with floating cabbage pads.'
+              : 'Locked. Requires 300 cabbages.';
+          } else if (region === 'crunch') {
+            desc = count >= 500
+              ? 'Crunch Caverns: Underground tunnels echoing with crunchy echoes.'
+              : 'Locked. Requires 500 cabbages.';
+          }
+          regionDescription.textContent = desc
