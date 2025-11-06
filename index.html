@@ -31,7 +31,20 @@
       <button data-region="leafy">Leafy Lake</button>
       <button data-region="crunch">Crunch Caverns</button>
     </div>
-    <div id="regionDescription"></div>
+    <div id="regionDescription" style="margin-top:10px; font-size:14px;"></div>
+
+    <!-- 🎯 Whack-a-Cabbage Minigame (Sprout Valley only) -->
+    <div id="whackGame" style="display:none; margin-top:10px;">
+      <h4>Whack-a-Cabbage!</h4>
+      <div id="grid" style="display:grid; grid-template-columns:repeat(3, 60px); gap:10px;"></div>
+      <div id="whackScore">Score: 0</div>
+    </div>
+
+    <!-- 🧱 Limit Upgrade (Sprout Valley only) -->
+    <div id="limitUpgrade" style="display:none; margin-top:10px;">
+      <button id="buyLimitUpgrade">Buy Limit Upgrade</button>
+      <span id="limitUpgradeCost">Cost: 50 score</span>
+    </div>
   </div>
 
   <div id="optionsIcon">
