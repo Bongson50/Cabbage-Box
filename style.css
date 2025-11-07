@@ -100,3 +100,40 @@ input[type="number"] {
   align-items: center;
   margin-top: 10px;
 }
+
+/* 🎣 Fishing Minigame styles */
+#fishingGame {
+  display: none;
+  margin-top: 10px;
+}
+
+#fishingBar {
+  position: relative;
+  width: 300px;
+  height: 30px;
+  background: #a0d8ef;
+  border: 2px solid #0077be;
+  margin-bottom: 10px;
+}
+
+#targetArea {
+  position: absolute;
+  height: 100%;
+  background: #0077be;
+  opacity: 0.5;
+}
+
+#movingLine {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: #ff0000;
+}
+
+#castButton {
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid black;
+  background: none;
+}
