@@ -37,13 +37,24 @@
     <div id="whackGame" style="display:none; margin-top:10px;">
       <h4>Whack-a-Cabbage!</h4>
       <div id="grid" style="display:grid; grid-template-columns:repeat(3, 60px); gap:10px;"></div>
-      <div id="whackScore">Score: 0</div>
+      <div id="whackScore">Mole Cabbage: 0</div>
     </div>
 
     <!-- 🧱 Limit Upgrade (Sprout Valley only) -->
     <div id="limitUpgrade" style="display:none; margin-top:10px;">
       <button id="buyLimitUpgrade">Buy Limit Upgrade</button>
-      <span id="limitUpgradeCost">Cost: 50 score</span>
+      <span id="limitUpgradeCost">Cost: 50 Mole Cabbage</span>
+    </div>
+
+    <!-- 🎣 Fishing Minigame (Leafy Lake only) -->
+    <div id="fishingGame" style="display:none; margin-top:10px;">
+      <h4>Fishing at Leafy Lake</h4>
+      <div id="fishingBar" style="position: relative; width: 300px; height: 30px; background: #a0d8ef; border: 2px solid #0077be; margin-bottom: 10px;">
+        <div id="targetArea" style="position: absolute; height: 100%; background: #0077be; opacity: 0.5;"></div>
+        <div id="movingLine" style="position: absolute; width: 2px; height: 100%; background: #ff0000;"></div>
+      </div>
+      <button id="castButton">Cast</button>
+      <div id="cabbishCount">Cabbish: 0</div>
     </div>
   </div>
 
