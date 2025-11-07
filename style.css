@@ -42,7 +42,8 @@ input[type="number"] {
   position: absolute;
   top: 10px;
   right: 10px;
-  display: block;
+  display: flex;
+  gap: 10px;
 }
 
 .circle-button {
@@ -55,6 +56,83 @@ input[type="number"] {
   line-height: 60px;
   text-align: center;
   cursor: pointer;
+}
+
+/* 🎯 Carnival Game styles */
+#carnivalGame {
+  margin-top: 20px;
+}
+
+.carnival-shelves {
+  width: 600px;
+  height: 400px;
+  position: relative;
+  background: #333;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.carnival-shelf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #654321;
+  border-bottom: 4px solid #432100;
+}
+
+#topShelf {
+  top: 20%;
+}
+
+#middleShelf {
+  top: 50%;
+}
+
+#bottomShelf {
+  top: 80%;
+}
+
+.carnival-cabbage {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: #90EE90;
+  border-radius: 50%;
+  cursor: pointer;
+  transform: translateY(-100%);
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.carnival-cabbage::before {
+  content: "🥬";
+}
+
+.cabbage-throw {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #90EE90;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: throw-arc 0.5s forwards;
+}
+
+@keyframes throw-arc {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.8) translateY(-100px);
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
 }
 
 #exportText {

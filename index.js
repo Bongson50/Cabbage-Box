@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let exploreActivated = false;
   let whackGameActive = false;
   let moleTimer;
+  let carnivalGameActive = false;
+  let carnivalScore = 0;
+  let carnivalInterval;
   
   // Mining game variables
   let crystalCount = 0;
@@ -68,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
       count -= amount;
       thrown += amount;
       updateDisplay();
+      
+      // Show bonus button when 500 cabbages are thrown
+      if (thrown >= 500 && $('bonusButton').style.display === 'none') {
+        $('bonusButton').style.display = 'block';
+      }
     }
   });
 
@@ -126,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const save = btoa(JSON.stringify({ 
       count, thrown, whackScore, cabbageLimit, limitUpgradeBought, 
       leafyLimitUpgradeBought, throwUnlocked, exploreUnlocked, 
-      exploreActivated, cabbishCount, crystalCount
+      exploreActivated, cabbishCount, crystalCount, carnivalScore,
+      bonusUnlocked: thrown >= 500
     }));
     $('exportText').textContent = generateNoise(10) + save + generateNoise(10);
   });
@@ -148,6 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
       exploreActivated = !!data.exploreActivated;
       cabbishCount = data.cabbishCount || 0;
       crystalCount = data.crystalCount || 0;
+      carnivalScore = data.carnivalScore || 0;
+
+      // Update bonus button visibility based on saved state
+      $('bonusButton').style.display = (data.bonusUnlocked || thrown >= 500) ? 'block' : 'none';
+      $('carnivalScore').textContent = `Targets Hit: ${carnivalScore}`;
 
       $('throwSection').style.display = throwUnlocked ? 'flex' : 'none';
       $('exploreSection').style.display = exploreUnlocked ? 'flex' : 'none';
@@ -403,6 +417,88 @@ document.addEventListener('DOMContentLoaded', () => {
       placeCrystalRandomly();
 
     }
+  }
+
+  // Carnival Game Logic
+  $('bonusButton').addEventListener('click', () => {
+    const isBonus = $('bonusButton').textContent === 'Bonus';
+    $('bonusButton').textContent = isBonus ? 'Back' : 'Bonus';
+    $('exploreInterface').style.display = isBonus ? 'none' : 'block';
+    $('carnivalGame').style.display = isBonus ? 'block' : 'none';
+
+    if (isBonus) {
+      startCarnivalGame();
+    } else {
+      stopCarnivalGame();
+    }
+  });
+
+  function startCarnivalGame() {
+    if (carnivalGameActive) return;
+    carnivalGameActive = true;
+    carnivalScore = 0;
+    $('carnivalScore').textContent = 'Targets Hit: 0';
+
+    // Click handler for throwing cabbages
+    const gameArea = $('carnivalGame');
+    gameArea.addEventListener('click', throwCabbageAt);
+
+    function spawnCabbage() {
+      const shelf = ['topShelf', 'middleShelf', 'bottomShelf'][Math.floor(Math.random() * 3)];
+      const cabbage = document.createElement('div');
+      cabbage.className = 'carnival-cabbage';
+      
+      // Random position on shelf
+      const position = Math.random() * (600 - 40); // container width - cabbage width
+      cabbage.style.left = position + 'px';
+      
+      $(shelf).appendChild(cabbage);
+
+      // Remove after 1.5 seconds if not clicked
+      setTimeout(() => {
+        if (cabbage.parentNode) {
+          cabbage.remove();
+        }
+      }, 1500);
+
+      cabbage.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent throwing cabbage when clicking target
+        carnivalScore++;
+        $('carnivalScore').textContent = `Targets Hit: ${carnivalScore}`;
+        cabbage.remove();
+      });
+    }
+
+    // Spawn cabbages every 0.8 seconds
+    carnivalInterval = setInterval(spawnCabbage, 800);
+  }
+
+  function stopCarnivalGame() {
+    if (!carnivalGameActive) return;
+    carnivalGameActive = false;
+    clearInterval(carnivalInterval);
+    
+    // Clean up any remaining cabbages
+    document.querySelectorAll('.carnival-cabbage').forEach(c => c.remove());
+    
+    // Remove click handler
+    $('carnivalGame').removeEventListener('click', throwCabbageAt);
+  }
+
+  function throwCabbageAt(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const throwCabbage = document.createElement('div');
+    throwCabbage.className = 'cabbage-throw';
+    throwCabbage.style.left = x + 'px';
+    throwCabbage.style.top = y + 'px';
+
+    event.currentTarget.appendChild(throwCabbage);
+
+    // Remove the thrown cabbage after animation
+    setTimeout(() => throwCabbage.remove(), 500);
   }
 
   updateDisplay();
