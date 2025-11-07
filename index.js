@@ -11,14 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
   let whackGameActive = false;
   let moleTimer;
 
+  // New for fishing minigame
+  let fishingGameActive = false;
+  let cabbishCount = 0;
+  let fishingInterval;
+  let movingLinePos = 0;
+  let movingLineDirection = 1;
+  let targetStart = 50; // px from left
+  let targetWidth = 60; // px
+
   const $ = id => document.getElementById(id);
 
   const updateDisplay = () => {
     $('cabbageCount').textContent = `Cabbage: ${count}`;
     $('thrownCount').textContent = `Thrown: ${thrown}`;
-    $('whackScore').textContent = `Score: ${whackScore}`;
+    $('whackScore').textContent = `Mole Cabbage: ${whackScore}`;
     $('cabbageLimit').textContent = `Limit: ${cabbageLimit}`;
     $('cabbageLimit').style.display = count >= cabbageLimit - 25 ? 'inline-block' : 'none';
+    $('cabbishCount').textContent = `Cabbish: ${cabbishCount}`;
   };
 
   $('clicker').addEventListener('click', () => {
@@ -86,25 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
       $('limitUpgradeCost').textContent = 'Already bought';
       updateDisplay();
     } else {
-      $('warning').textContent = 'Not enough score for limit upgrade.';
+      $('warning').textContent = 'Not enough Mole Cabbage for limit upgrade.';
     }
   });
 
-  const generateNoise = len => Array.from({ length: len }, () =>
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]
-  ).join('');
+  const generateNoise = len => Array.from({ length: len }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join('');
 
   $('exportButton').addEventListener('click', () => {
-    const save = btoa(JSON.stringify({
-      count,
-      thrown,
-      whackScore,
-      cabbageLimit,
-      limitUpgradeBought,
-      throwUnlocked,
-      exploreUnlocked,
-      exploreActivated
-    }));
+    const save = btoa(JSON.stringify({ count, thrown, whackScore, cabbageLimit, limitUpgradeBought, throwUnlocked, exploreUnlocked, exploreActivated, cabbishCount }));
     $('exportText').textContent = generateNoise(10) + save + generateNoise(10);
   });
 
@@ -122,11 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
       throwUnlocked = !!data.throwUnlocked;
       exploreUnlocked = !!data.exploreUnlocked;
       exploreActivated = !!data.exploreActivated;
+      cabbishCount = data.cabbishCount || 0;
 
       $('throwSection').style.display = throwUnlocked ? 'flex' : 'none';
       $('exploreSection').style.display = exploreUnlocked ? 'flex' : 'none';
       $('exploreInterface').style.display = exploreActivated ? 'block' : 'none';
-      $('limitUpgradeCost').textContent = limitUpgradeBought ? 'Already bought' : 'Cost: 50 score';
+      $('limitUpgradeCost').textContent = limitUpgradeBought ? 'Already bought' : 'Cost: 50 Mole Cabbage';
       lastClickTime = Date.now();
       updateDisplay();
     } catch {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const game = $('whackGame');
     game.style.display = 'block';
     grid.innerHTML = '';
-    scoreDisplay.textContent = `Score: ${whackScore}`;
+    scoreDisplay.textContent = `Mole Cabbage: ${whackScore}`;
 
     for (let i = 0; i < 9; i++) {
       const hole = document.createElement('div');
@@ -173,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const regionDescription = $('regionDescription');
   const regionButtons = document.querySelectorAll('#regionList button');
-
   regionButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const region = btn.dataset.region;
@@ -182,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Hide all region-specific features first
       $('whackGame').style.display = 'none';
       $('limitUpgrade').style.display = 'none';
+      $('fishingGame').style.display = 'none';
 
       if (region === 'sprout') {
         if (count >= 200) {
@@ -195,9 +195,15 @@ document.addEventListener('DOMContentLoaded', () => {
           desc = 'Locked. Requires 200 cabbages.';
         }
       } else if (region === 'leafy') {
-        desc = count >= 300
-          ? 'Leafy Lake: A shimmering lake with floating cabbage pads.'
-          : 'Locked. Requires 300 cabbages.';
+        if (count >= 300) {
+          desc = 'Leafy Lake: A shimmering lake with floating cabbage pads.';
+          $('fishingGame').style.display = 'block';
+          if (!fishingGameActive) {
+            startFishingGame();
+          }
+        } else {
+          desc = 'Locked. Requires 300 cabbages.';
+        }
       } else if (region === 'crunch') {
         desc = count >= 500
           ? 'Crunch Caverns: Underground tunnels echoing with crunchy echoes.'
@@ -207,6 +213,48 @@ document.addEventListener('DOMContentLoaded', () => {
       regionDescription.textContent = desc;
     });
   });
+
+  function startFishingGame() {
+    if (fishingGameActive) return;
+    fishingGameActive = true;
+
+    const bar = $('fishingBar');
+    const target = $('targetArea');
+    const line = $('movingLine');
+    const castButton = $('castButton');
+
+    // Initialize target area randomly within bar width
+    const barWidth = bar.clientWidth;
+    targetStart = Math.floor(Math.random() * (barWidth - targetWidth));
+    target.style.left = targetStart + 'px';
+    target.style.width = targetWidth + 'px';
+
+    movingLinePos = 0;
+    movingLineDirection = 1;
+    line.style.left = movingLinePos + 'px';
+
+    if (fishingInterval) clearInterval(fishingInterval);
+
+    fishingInterval = setInterval(() => {
+      movingLinePos += movingLineDirection * 5;
+      if (movingLinePos <= 0 || movingLinePos >= barWidth) {
+        movingLineDirection *= -1;
+      }
+      line.style.left = movingLinePos + 'px';
+    }, 20);
+
+    castButton.onclick = () => {
+      // Check if moving line is within target area
+      if (movingLinePos >= targetStart && movingLinePos <= targetStart + targetWidth) {
+        cabbishCount++;
+        updateDisplay();
+
+        // Move target area randomly
+        targetStart = Math.floor(Math.random() * (barWidth - targetWidth));
+        target.style.left = targetStart + 'px';
+      }
+    };
+  }
 
   updateDisplay();
 });
