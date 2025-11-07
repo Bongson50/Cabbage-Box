@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let carnivalScore = 0;
   let carnivalInterval;
   
+  // Region unlock tracking
+  let sproutValleyUnlocked = false;
+  let leafyLakeUnlocked = false;
+  let crunchCavernsUnlocked = false;
+  
   // Mining game variables
   let crystalCount = 0;
   let selectedTool = 'pickaxe';
@@ -135,7 +140,11 @@ document.addEventListener('DOMContentLoaded', () => {
       count, thrown, whackScore, cabbageLimit, limitUpgradeBought, 
       leafyLimitUpgradeBought, throwUnlocked, exploreUnlocked, 
       exploreActivated, cabbishCount, crystalCount, carnivalScore,
-      bonusUnlocked: thrown >= 500
+      bonusUnlocked: thrown >= 500,
+      // Region unlock states
+      sproutValleyUnlocked,
+      leafyLakeUnlocked,
+      crunchCavernsUnlocked
     }));
     $('exportText').textContent = generateNoise(10) + save + generateNoise(10);
   });
@@ -158,6 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
       cabbishCount = data.cabbishCount || 0;
       crystalCount = data.crystalCount || 0;
       carnivalScore = data.carnivalScore || 0;
+
+      // Load region unlock states
+      sproutValleyUnlocked = !!data.sproutValleyUnlocked;
+      leafyLakeUnlocked = !!data.leafyLakeUnlocked;
+      crunchCavernsUnlocked = !!data.crunchCavernsUnlocked;
 
       // Update bonus button visibility based on saved state
       $('bonusButton').style.display = (data.bonusUnlocked || thrown >= 500) ? 'block' : 'none';
@@ -227,7 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
       $('miningGame').style.display = 'none';
 
       if (region === 'sprout') {
+        // Check if region should be unlocked
         if (count >= 200) {
+          sproutValleyUnlocked = true;
+        }
+        
+        if (sproutValleyUnlocked) {
           desc = 'Sprout Valley: Gentle hills where cabbages first sprouted.';
           $('whackGame').style.display = 'block';
           if (!limitUpgradeBought) {
@@ -238,7 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
           desc = 'Locked. Requires 200 cabbages.';
         }
       } else if (region === 'leafy') {
+        // Check if region should be unlocked
         if (count >= 300) {
+          leafyLakeUnlocked = true;
+        }
+        
+        if (leafyLakeUnlocked) {
           desc = 'Leafy Lake: A shimmering lake with floating cabbage pads.';
           $('fishingGame').style.display = 'block';
           if (!fishingGameActive) {
@@ -251,7 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
           desc = 'Locked. Requires 300 cabbages.';
         }
       } else if (region === 'crunch') {
+        // Check if region should be unlocked
         if (count >= 500) {
+          crunchCavernsUnlocked = true;
+        }
+        
+        if (crunchCavernsUnlocked) {
           desc = 'Crunch Caverns: Underground tunnels echoing with crunchy echoes.';
           $('miningGame').style.display = 'block';
           if (!miningGameActive) {
