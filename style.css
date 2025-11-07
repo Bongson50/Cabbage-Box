@@ -1,6 +1,6 @@
 body {
   font-family: sans-serif;
-  padding: 20px;
+  padding: 80px 20px 20px 20px; /* leave room at top for the fixed top nav */
   position: relative;
 }
 
@@ -56,6 +56,7 @@ input[type="number"] {
   line-height: 60px;
   text-align: center;
   cursor: pointer;
+  margin: 0 6px;
 }
 
 /* 🎯 Carnival Game styles */
@@ -297,3 +298,77 @@ input[type="number"] {
   background: #4a9;
   border-color: #5ba;
 }
+
+/* Parkour / Town styles */
+#visitTownContainer {
+  text-align: left;
+}
+
+#parkourContainer {
+  width: 620px;
+  margin-top: 8px;
+}
+
+#topNav {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  gap: 10px;
+  background: rgba(255,255,255,0.95);
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+#townPanel {
+  background: #eef;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.parkour-instructions {
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* Small helper for the parkour canvas container */
+.parkour-canvas-wrap {
+  position: relative;
+}
+
+#portalMsg {
+  color: #060;
+  font-weight: bold;
+}
+
+/* Visual polish */
+#optionsIcon .circle-button, #topNav .circle-button {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  background: linear-gradient(180deg,#fff,#eee);
+}
+
+#visitTownButton {
+  padding: 8px 12px;
+  background: linear-gradient(180deg,#ffd27f,#ffb84d);
+  border: 1px solid #aa6a00;
+  border-radius: 6px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+#visitTownContainer { display:block; }
+
+#parkourCanvas { border-radius:6px; box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
+
+#townPanel { box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+
+.carnival-shelf { box-shadow: inset 0 -6px 10px rgba(0,0,0,0.3); }
+
+.carnival-cabbage { box-shadow: 0 3px 6px rgba(0,0,0,0.25); }
+
+/* player styling (drawn on canvas but provide fallback indicator) */
+.player-indicator { width:24px; height:30px; background:#f44; border-radius:4px; }

@@ -87,10 +87,31 @@
     </div>
   </div>
 
+  <!-- Visit Town / Parkour (appears when you collect 5 crystal cabbages) -->
+  <div id="visitTownContainer" style="display:none; margin-top:10px;">
+    <button id="visitTownButton">Visit the Town</button>
+    <div id="parkourContainer" style="display:none; margin-top:10px;">
+      <canvas id="parkourCanvas" width="600" height="220" style="background:#99c; display:block; border:1px solid #333;"></canvas>
+      <div id="portalMsg" style="display:none; margin-top:6px;">You entered the portal... teleporting to Town.</div>
+    </div>
+  </div>
+
+  <!-- Top navigation that appears after entering portal -->
+  <div id="topNav" style="display:none; position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:999;">
+    <button id="homeTopBtn" class="circle-button">Home</button>
+    <button id="townTopBtn" class="circle-button">Town</button>
+  </div>
+
   <div id="optionsIcon">
     <button id="optionsButton" class="circle-button">Options</button>
     <button id="backButton" class="circle-button" style="display:none;">Back</button>
     <button id="bonusButton" class="circle-button" style="display:none;">Bonus</button>
+  </div>
+
+  <!-- Town panel (appears after entering portal) -->
+  <div id="townPanel" style="display:none; margin-top:10px;">
+    <h3>Welcome to Town</h3>
+    <p>You've arrived in the town. Use the top bar to go Home or browse the Town.</p>
   </div>
 
   <!-- 🎯 Carnival Minigame -->
