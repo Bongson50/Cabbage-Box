@@ -56,6 +56,35 @@
       <button id="castButton">Cast</button>
       <div id="cabbishCount">Cabbish: 0</div>
     </div>
+
+    <!-- 🧱 Limit Upgrade (Leafy Lake only) -->
+    <div id="leafyLimitUpgrade" style="display:none; margin-top:10px;">
+      <button id="buyLeafyLimitUpgrade">Buy Limit Upgrade</button>
+      <span id="leafyLimitUpgradeCost">Cost: 50 Cabbish</span>
+    </div>
+
+    <!-- 🪨 Mining Minigame (Crunch Caverns only) -->
+    <div id="miningGame" style="display:none; margin-top:10px;">
+      <h4>Mining in Crunch Caverns</h4>
+      <div class="mining-instructions">
+        <p>How to play:</p>
+        <ul>
+          <li>Click on blocks to mine them with your pickaxe</li>
+          <li>Each block requires multiple hits to break</li>
+          <li>Find the crystal cabbages (💎) hidden in the blocks</li>
+          <li>Crystal cabbages will move to a new location when found</li>
+          <li>There are always 2-3 crystal cabbages hidden in the grid</li>
+        </ul>
+      </div>
+      <div class="mining-tools">
+        <button class="mining-tool selected" data-tool="pickaxe">⛏️ Pickaxe</button>
+        <button id="refreshMining" class="mining-tool">🔄 New Grid</button>
+      </div>
+      <div class="mining-grid" id="miningGrid"></div>
+      <div class="mining-inventory">
+        <div>💎 Crystal Cabbages: <span id="crystalCount">0</span></div>
+      </div>
+    </div>
   </div>
 
   <div id="optionsIcon">

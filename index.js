@@ -4,12 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let whackScore = 0;
   let cabbageLimit = 200;
   let limitUpgradeBought = false;
+  let leafyLimitUpgradeBought = false;
   let lastClickTime = Date.now();
   let throwUnlocked = false;
   let exploreUnlocked = false;
   let exploreActivated = false;
   let whackGameActive = false;
   let moleTimer;
+  
+  // Mining game variables
+  let crystalCount = 0;
+  let selectedTool = 'pickaxe';
+  let miningGrid = [];
+  let miningGameActive = false;
 
   // New for fishing minigame
   let fishingGameActive = false;
@@ -100,10 +107,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  $('buyLeafyLimitUpgrade').addEventListener('click', () => {
+    if (leafyLimitUpgradeBought) return;
+    if (cabbishCount >= 50) {
+      cabbishCount -= 50;
+      cabbageLimit = 500;
+      leafyLimitUpgradeBought = true;
+      $('leafyLimitUpgradeCost').textContent = 'Already bought';
+      updateDisplay();
+    } else {
+      $('warning').textContent = 'Not enough Cabbish for limit upgrade.';
+    }
+  });
+
   const generateNoise = len => Array.from({ length: len }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 62)]).join('');
 
   $('exportButton').addEventListener('click', () => {
-    const save = btoa(JSON.stringify({ count, thrown, whackScore, cabbageLimit, limitUpgradeBought, throwUnlocked, exploreUnlocked, exploreActivated, cabbishCount }));
+    const save = btoa(JSON.stringify({ 
+      count, thrown, whackScore, cabbageLimit, limitUpgradeBought, 
+      leafyLimitUpgradeBought, throwUnlocked, exploreUnlocked, 
+      exploreActivated, cabbishCount, crystalCount
+    }));
     $('exportText').textContent = generateNoise(10) + save + generateNoise(10);
   });
 
@@ -118,15 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
       whackScore = data.whackScore || 0;
       cabbageLimit = data.cabbageLimit || 200;
       limitUpgradeBought = !!data.limitUpgradeBought;
+      leafyLimitUpgradeBought = !!data.leafyLimitUpgradeBought;
       throwUnlocked = !!data.throwUnlocked;
       exploreUnlocked = !!data.exploreUnlocked;
       exploreActivated = !!data.exploreActivated;
       cabbishCount = data.cabbishCount || 0;
+      crystalCount = data.crystalCount || 0;
 
       $('throwSection').style.display = throwUnlocked ? 'flex' : 'none';
       $('exploreSection').style.display = exploreUnlocked ? 'flex' : 'none';
       $('exploreInterface').style.display = exploreActivated ? 'block' : 'none';
       $('limitUpgradeCost').textContent = limitUpgradeBought ? 'Already bought' : 'Cost: 50 Mole Cabbage';
+      updateMiningDisplay();
       lastClickTime = Date.now();
       updateDisplay();
     } catch {
@@ -182,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
       $('whackGame').style.display = 'none';
       $('limitUpgrade').style.display = 'none';
       $('fishingGame').style.display = 'none';
+      $('leafyLimitUpgrade').style.display = 'none';
+      $('miningGame').style.display = 'none';
 
       if (region === 'sprout') {
         if (count >= 200) {
@@ -201,13 +230,22 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!fishingGameActive) {
             startFishingGame();
           }
+          if (!leafyLimitUpgradeBought) {
+            $('leafyLimitUpgrade').style.display = 'flex';
+          }
         } else {
           desc = 'Locked. Requires 300 cabbages.';
         }
       } else if (region === 'crunch') {
-        desc = count >= 500
-          ? 'Crunch Caverns: Underground tunnels echoing with crunchy echoes.'
-          : 'Locked. Requires 500 cabbages.';
+        if (count >= 500) {
+          desc = 'Crunch Caverns: Underground tunnels echoing with crunchy echoes.';
+          $('miningGame').style.display = 'block';
+          if (!miningGameActive) {
+            startMiningGame();
+          }
+        } else {
+          desc = 'Locked. Requires 500 cabbages.';
+        }
       }
 
       regionDescription.textContent = desc;
@@ -254,6 +292,117 @@ document.addEventListener('DOMContentLoaded', () => {
         target.style.left = targetStart + 'px';
       }
     };
+  }
+
+  function updateMiningDisplay() {
+    if (!$('crystalCount')) return;
+    $('crystalCount').textContent = crystalCount;
+    
+    const tools = document.querySelectorAll('.mining-tool');
+    tools.forEach(tool => {
+      tool.classList.toggle('selected', tool.dataset.tool === selectedTool);
+    });
+  }
+
+  function generateMiningGrid() {
+    const grid = $('miningGrid');
+    grid.innerHTML = '';
+    miningGrid = [];
+
+    // Create empty 8x8 grid
+    for (let i = 0; i < 8; i++) {
+      miningGrid[i] = [];
+      for (let j = 0; j < 8; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'mining-cell';
+        cell.dataset.row = i;
+        cell.dataset.col = j;
+        
+        miningGrid[i][j] = {
+          revealed: false,
+          hasCrystal: false,
+          health: 2
+        };
+
+        cell.addEventListener('click', () => mineTile(i, j));
+        grid.appendChild(cell);
+      }
+    }
+
+    // Place 2-3 crystal cabbages randomly
+    const numCrystals = Math.floor(Math.random() * 2) + 2; // 2 or 3
+    for (let i = 0; i < numCrystals; i++) {
+      placeCrystalRandomly();
+    }
+  }
+
+  function placeCrystalRandomly() {
+    let placed = false;
+    while (!placed) {
+      const row = Math.floor(Math.random() * 8);
+      const col = Math.floor(Math.random() * 8);
+      if (!miningGrid[row][col].hasCrystal && !miningGrid[row][col].revealed) {
+        miningGrid[row][col].hasCrystal = true;
+        miningGrid[row][col].health = 3;
+        placed = true;
+      }
+    }
+  }
+
+  function startMiningGame() {
+    if (miningGameActive) return;
+    miningGameActive = true;
+
+    generateMiningGrid();
+
+    // Tool selection and refresh button
+    const tools = document.querySelectorAll('.mining-tool');
+    tools.forEach(tool => {
+      if (tool.id === 'refreshMining') {
+        tool.addEventListener('click', generateMiningGrid);
+      } else {
+        tool.addEventListener('click', () => {
+          selectedTool = tool.dataset.tool;
+          tools.forEach(t => t.classList.toggle('selected', t === tool));
+        });
+      }
+    });
+
+    updateMiningDisplay();
+  }
+
+  function mineTile(row, col) {
+    if (!miningGrid[row][col] || miningGrid[row][col].revealed) return;
+
+    const tile = miningGrid[row][col];
+    const cell = document.querySelector(`.mining-cell[data-row="${row}"][data-col="${col}"]`);
+
+    tile.health--;
+    if (tile.health <= 0) {
+      revealTile(row, col, tile, cell);
+    } else {
+      cell.style.backgroundColor = `rgb(${119 + (3 - tile.health) * 20}, ${119 + (3 - tile.health) * 20}, ${119 + (3 - tile.health) * 20})`;
+    }
+
+    updateMiningDisplay();
+  }
+
+  function revealTile(row, col, tile, cell) {
+    tile.revealed = true;
+    cell.classList.add('revealed');
+    
+    if (tile.hasCrystal) {
+      cell.classList.add('gem');
+      cell.textContent = '💎';
+      crystalCount++;
+      
+      // Remove the crystal from this location
+      tile.hasCrystal = false;
+      
+      // Place a new crystal in a random location
+      placeCrystalRandomly();
+
+    }
   }
 
   updateDisplay();
