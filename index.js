@@ -616,8 +616,8 @@ document.addEventListener('DOMContentLoaded', () => {
       {x:0,y:180,w:1200,h:40},
       {x:1520,y:180,w:800,h:40},
       {x:2480,y:140,w:480,h:40},
-      {x:3120,y:180,w:800,h:40, moving: {min:3120, max:3920, vx:1.6}},
-      {x:3760,y:140,w:640,h:40, moving: {min:3760, max:4640, vx:1.0}},
+  {x:3120,y:180,w:800,h:40, moving: {min:3120, max:3920, vx:2.2}},
+  {x:3760,y:140,w:640,h:40, moving: {min:3760, max:4640, vx:1.6}},
       {x:4560,y:160,w:480,h:40},
       {x:5280,y:180,w:720,h:40}
     ];
@@ -630,8 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
       {x:5200,y:200,w:20,h:20}
     ];
 
-    function keyDown(e){ parkourState.keys[e.code]=true; }
-    function keyUp(e){ parkourState.keys[e.code]=false; }
+    function keyDown(e){
+      const code = e.code;
+      // Normalize Space key (some browsers/key combos)
+      if (code === 'Space' || e.key === ' ' || e.key === 'Spacebar') parkourState.keys['Space'] = true;
+      parkourState.keys[code] = true;
+    }
+    function keyUp(e){
+      const code = e.code;
+      if (code === 'Space' || e.key === ' ' || e.key === 'Spacebar') parkourState.keys['Space'] = false;
+      parkourState.keys[code] = false;
+    }
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
     parkourState._keyDown = keyDown; parkourState._keyUp = keyUp;
@@ -639,21 +648,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function loop(){
       const ctx = parkourState.ctx;
       const p = parkourState.player;
-      // physics
-      if (parkourState.keys['ArrowLeft']) p.x -= 4;
-      if (parkourState.keys['ArrowRight']) p.x += 4;
-      if ((parkourState.keys['Space'] || parkourState.keys['ArrowUp']) && p.onGround) { p.vy = -10; p.onGround=false; }
-      const gravity = 0.7;
-      p.vy += gravity; p.y += p.vy;
+  // physics
+  const speed = 5;
+  if (parkourState.keys['ArrowLeft'] || parkourState.keys['KeyA']) p.x -= speed;
+  if (parkourState.keys['ArrowRight'] || parkourState.keys['KeyD']) p.x += speed;
+  if ((parkourState.keys['Space'] || parkourState.keys['ArrowUp'] || parkourState.keys['KeyW']) && p.onGround) { p.vy = -12; p.onGround=false; }
+  const gravity = 0.9;
+  p.vy += gravity; p.y += p.vy;
 
       // platform collision: check all platforms and land on top when falling onto them
       p.onGround = false;
+      const prevBottom = p.y + p.h - p.vy;
+      const currBottom = p.y + p.h;
       for (let pi = 0; pi < parkourState.platforms.length; pi++) {
         const plat = parkourState.platforms[pi];
         // if player is horizontally overlapping this platform
         if (p.x + p.w > plat.x && p.x < plat.x + plat.w) {
-          // if player's feet are below or touching platform top and previous frame was above (landing)
-          if (p.y + p.h >= plat.y && (p.y + p.h - p.vy) <= plat.y + 2 && p.vy >= 0) {
+          // if player's previous bottom was above (or near) platform and now intersects, and falling
+          if (currBottom >= plat.y && prevBottom <= plat.y + 8 && p.vy >= -2) {
             p.y = plat.y - p.h;
             p.vy = 0;
             p.onGround = true;
