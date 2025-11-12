@@ -176,10 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Visit town / location
       visitTownUnlocked,
       currentLocation,
-      // Parkour state
-      parkourActive,
-      parkourPlayer: parkourState.player ? { x: parkourState.player.x, y: parkourState.player.y, vy: parkourState.player.vy, onGround: !!parkourState.player.onGround } : null,
-      parkourCamera: parkourState.cameraX || 0,
+  // Parkour state
+  parkourActive,
+  parkourCompleted,
+  parkourPlayer: parkourState.player ? { x: parkourState.player.x, y: parkourState.player.y, vy: parkourState.player.vy, onGround: !!parkourState.player.onGround } : null,
+  parkourCamera: parkourState.cameraX || 0,
       // Mining grid
       miningGrid: miningGridSave
     }));
@@ -218,9 +219,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.parkourPlayer) {
           parkourState.player = Object.assign({ w:24, h:30, vy:0, onGround:false }, data.parkourPlayer);
         }
-        parkourActive = !!data.parkourActive;
-        // restore camera
-        parkourState.cameraX = data.parkourCamera || 0;
+  parkourActive = !!data.parkourActive;
+  // restore parkour completed flag
+  parkourCompleted = !!data.parkourCompleted;
+  // restore camera
+  parkourState.cameraX = data.parkourCamera || 0;
 
       // Load mining grid if present
       if (data.miningGrid) {
@@ -229,17 +232,14 @@ document.addEventListener('DOMContentLoaded', () => {
         generateMiningGrid();
       }
 
-      // Update UI based on loaded location
+      // Update UI based on loaded location and parkour completion
+      updateVisitTownVisibility();
       if (currentLocation === 'town') {
-        $('topNav').style.display = 'block';
         $('townPanel').style.display = 'block';
         $('exploreInterface').style.display = 'none';
-        if ($('bonusButton')) $('bonusButton').style.display = 'none';
       } else {
-        $('topNav').style.display = 'none';
         $('townPanel').style.display = 'none';
         $('exploreInterface').style.display = exploreActivated ? 'block' : 'none';
-        if ($('bonusButton')) $('bonusButton').style.display = (thrown >= 500) ? 'block' : 'none';
       }
 
       $('carnivalScore').textContent = `Targets Hit: ${carnivalScore}`;
@@ -611,24 +611,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     parkourState.particles = [];
     parkourEntering = false;
-    // more interesting platforms: multiple segments, some moving, create gaps and elevated platforms
+    // more interesting platforms stretched across a longer level (4x longer)
     parkourState.platforms = [
-      {x:0,y:180,w:300,h:40},
-      {x:380,y:180,w:200,h:40},
-      {x:620,y:140,w:120,h:40},
-      {x:780,y:180,w:200,h:40, moving: {min:780, max:980, vx:1.6}},
-      {x:940,y:140,w:160,h:40, moving: {min:940, max:1160, vx:1.0}},
-      {x:1140,y:160,w:120,h:40},
-      {x:1320,y:180,w:180,h:40},
-      {x:1560,y:180,w:200,h:40}
+      {x:0,y:180,w:1200,h:40},
+      {x:1520,y:180,w:800,h:40},
+      {x:2480,y:140,w:480,h:40},
+      {x:3120,y:180,w:800,h:40, moving: {min:3120, max:3920, vx:1.6}},
+      {x:3760,y:140,w:640,h:40, moving: {min:3760, max:4640, vx:1.0}},
+      {x:4560,y:160,w:480,h:40},
+      {x:5280,y:180,w:720,h:40}
     ];
     parkourState.portalX = parkourState.levelWidth - 120;
-    // spikes placed in gaps
+    // spikes placed in gaps across the longer level
     parkourState.spikes = [
-      {x:320,y:200,w:20,h:20},
-      {x:600,y:200,w:20,h:20},
-      {x:920,y:200,w:20,h:20},
-      {x:1600,y:200,w:20,h:20}
+      {x:1280,y:200,w:20,h:20},
+      {x:2400,y:200,w:20,h:20},
+      {x:3680,y:200,w:20,h:20},
+      {x:5200,y:200,w:20,h:20}
     ];
 
     function keyDown(e){ parkourState.keys[e.code]=true; }
@@ -872,7 +871,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const homeTop = $('homeTopBtn');
   const townTop = $('townTopBtn');
   if (homeTop) homeTop.addEventListener('click', goHome);
-  if (townTop) townTop.addEventListener('click', () => { $('townPanel').style.display = 'block'; currentLocation = 'town'; });
+  if (townTop) townTop.addEventListener('click', () => {
+    // switch to town: hide home UI elements
+    currentLocation = 'town';
+    if ($('clicker')) $('clicker').style.display = 'none';
+    if ($('throwSection')) $('throwSection').style.display = 'none';
+    if ($('exploreInterface')) $('exploreInterface').style.display = 'none';
+    if ($('parkourContainer')) $('parkourContainer').style.display = 'none';
+    if ($('townPanel')) $('townPanel').style.display = 'block';
+    updateVisitTownVisibility();
+  });
 
   // ensure VisitTown visibility on load
   updateVisitTownVisibility();
